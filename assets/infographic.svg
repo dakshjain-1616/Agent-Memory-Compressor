@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" width="960" height="620" font-family="-apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f5ff"/>
+      <stop offset="1" stop-color="#eef7f5"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="soft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f3eeff"/>
+    </linearGradient>
+    <linearGradient id="barBefore" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c4b5fd"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="barAfter" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="3" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.18"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrowTeal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0d9488"/>
+    </marker>
+  </defs>
+
+  <rect width="960" height="620" fill="url(#bg)"/>
+
+  <!-- Header -->
+  <g id="header">
+    <text x="40" y="52" font-size="28" font-weight="700" fill="#1f1147">🧠 Agent Memory Compressor</text>
+    <text x="40" y="78" font-size="15" fill="#5b4b82">Long-running context without budget blowup</text>
+  </g>
+
+  <!-- Importance Scorer callout (top right) -->
+  <g id="scorer" filter="url(#shadow)">
+    <rect x="620" y="28" width="308" height="66" rx="14" fill="url(#soft)" stroke="#c4b5fd"/>
+    <text x="636" y="50" font-size="12" font-weight="700" fill="#6d28d9">ImportanceScorer</text>
+    <text x="636" y="72" font-size="12" font-family="ui-monospace, Menlo, monospace" fill="#1f1147">score = recency·0.4 + type·0.4 + keyword·0.2</text>
+    <text x="636" y="88" font-size="10" fill="#7c6aa8">recency decay · type weight · keyword boost</text>
+  </g>
+
+  <!-- Memory Timeline panel -->
+  <g id="timeline" filter="url(#shadow)">
+    <rect x="40" y="110" width="880" height="150" rx="18" fill="#ffffff" stroke="#e9e2ff"/>
+    <text x="60" y="138" font-size="14" font-weight="700" fill="#1f1147">Memory Timeline — turns 1 … N</text>
+
+    <!-- Older region -->
+    <rect x="60" y="152" width="620" height="78" rx="10" fill="#eef0f5" opacity="0.85"/>
+    <text x="72" y="170" font-size="11" font-weight="600" fill="#6b7280">OLDER · candidates for compression</text>
+
+    <!-- Recent Protected region -->
+    <rect x="690" y="152" width="220" height="78" rx="10" fill="#d1fae5" stroke="#34d399"/>
+    <text x="704" y="170" font-size="11" font-weight="700" fill="#065f46">RECENT PROTECTED (last 3)</text>
+
+    <!-- Dots (turns) -->
+    <g id="dots">
+      <!-- older dots -->
+      <g fill="#a78bfa">
+        <circle cx="80"  cy="200" r="5"/>
+        <circle cx="110" cy="200" r="5"/>
+        <circle cx="140" cy="200" r="5"/>
+        <circle cx="170" cy="200" r="5"/>
+        <circle cx="200" cy="200" r="5"/>
+        <circle cx="230" cy="200" r="5"/>
+        <circle cx="260" cy="200" r="5"/>
+        <circle cx="290" cy="200" r="5"/>
+        <circle cx="320" cy="200" r="5"/>
+        <circle cx="350" cy="200" r="5"/>
+        <circle cx="380" cy="200" r="5"/>
+        <circle cx="410" cy="200" r="5"/>
+        <circle cx="440" cy="200" r="5"/>
+        <circle cx="470" cy="200" r="5"/>
+        <circle cx="500" cy="200" r="5"/>
+        <circle cx="530" cy="200" r="5"/>
+        <circle cx="560" cy="200" r="5"/>
+        <circle cx="590" cy="200" r="5"/>
+        <circle cx="620" cy="200" r="5"/>
+        <circle cx="650" cy="200" r="5"/>
+      </g>
+      <!-- recent dots (teal/green) -->
+      <g fill="#10b981">
+        <circle cx="740" cy="200" r="7" filter="url(#glow)"/>
+        <circle cx="800" cy="200" r="7" filter="url(#glow)"/>
+        <circle cx="860" cy="200" r="7" filter="url(#glow)"/>
+      </g>
+    </g>
+
+    <!-- axis labels -->
+    <text x="80"  y="222" font-size="9" fill="#7c6aa8">t1</text>
+    <text x="648" y="222" font-size="9" fill="#7c6aa8">t20</text>
+    <text x="732" y="222" font-size="9" fill="#065f46" font-weight="600">N-2</text>
+    <text x="792" y="222" font-size="9" fill="#065f46" font-weight="600">N-1</text>
+    <text x="856" y="222" font-size="9" fill="#065f46" font-weight="600">N</text>
+  </g>
+
+  <!-- Forgetting Curve triggers -->
+  <g id="triggers">
+    <g filter="url(#shadow)">
+      <rect x="40" y="290" width="200" height="80" rx="14" fill="url(#soft)" stroke="#c4b5fd"/>
+      <text x="55" y="312" font-size="12" font-weight="700" fill="#6d28d9">⏱ ForgettingCurve</text>
+      <text x="55" y="332" font-size="11" fill="#1f1147">interval = every 10 turns</text>
+      <text x="55" y="350" font-size="11" fill="#1f1147">threshold = 6000 tokens</text>
+      <text x="55" y="365" font-size="10" fill="#7c6aa8">triggers compression pass</text>
+    </g>
+
+    <!-- Arrow to CompressionEngine -->
+    <path d="M 245,330 C 300,330 320,330 370,330" stroke="#7c3aed" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- CompressionEngine -->
+  <g id="engine" filter="url(#shadow)">
+    <rect x="375" y="290" width="210" height="80" rx="16" fill="url(#violet)"/>
+    <text x="480" y="322" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">CompressionEngine</text>
+    <text x="480" y="345" text-anchor="middle" font-size="11" fill="#ede9fe">scores · selects · compresses</text>
+    <text x="480" y="360" text-anchor="middle" font-size="10" fill="#ddd6fe">orchestrated by MemoryCompressor</text>
+  </g>
+
+  <!-- 3 Strategy branches -->
+  <g id="strategies">
+    <!-- lines -->
+    <path d="M 585,320 C 630,320 650,310 680,300" stroke="#0d9488" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+    <path d="M 585,330 C 640,330 660,330 680,330" stroke="#0d9488" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+    <path d="M 585,340 C 630,340 650,350 680,360" stroke="#0d9488" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+    <g filter="url(#shadow)">
+      <rect x="690" y="285" width="230" height="32" rx="10" fill="url(#teal)"/>
+      <text x="805" y="306" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">SUMMARIZE</text>
+    </g>
+    <g filter="url(#shadow)">
+      <rect x="690" y="322" width="230" height="32" rx="10" fill="url(#teal)"/>
+      <text x="805" y="343" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">EXTRACT_FACTS</text>
+    </g>
+    <g filter="url(#shadow)">
+      <rect x="690" y="359" width="230" height="32" rx="10" fill="url(#teal)"/>
+      <text x="805" y="380" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">ARCHIVE</text>
+    </g>
+  </g>
+
+  <!-- Components row -->
+  <g id="components">
+    <g filter="url(#shadow)">
+      <rect x="40" y="405" width="200" height="70" rx="14" fill="#ffffff" stroke="#e9e2ff"/>
+      <text x="55" y="428" font-size="12" font-weight="700" fill="#6d28d9">MemoryEntry / Store</text>
+      <text x="55" y="446" font-size="10" fill="#5b4b82">Pydantic models · typed turns</text>
+      <text x="55" y="462" font-size="10" fill="#5b4b82">content · type · tokens · ts</text>
+    </g>
+    <g filter="url(#shadow)">
+      <rect x="260" y="405" width="200" height="70" rx="14" fill="#ffffff" stroke="#e9e2ff"/>
+      <text x="275" y="428" font-size="12" font-weight="700" fill="#6d28d9">ImportanceScorer</text>
+      <text x="275" y="446" font-size="10" fill="#5b4b82">recency + type + keyword</text>
+      <text x="275" y="462" font-size="10" fill="#5b4b82">ranks entries for retention</text>
+    </g>
+    <g filter="url(#shadow)">
+      <rect x="480" y="405" width="200" height="70" rx="14" fill="#ffffff" stroke="#e9e2ff"/>
+      <text x="495" y="428" font-size="12" font-weight="700" fill="#6d28d9">ContextBuilder</text>
+      <text x="495" y="446" font-size="10" fill="#5b4b82">protects last N recent turns</text>
+      <text x="495" y="462" font-size="10" fill="#5b4b82">assembles final prompt</text>
+    </g>
+    <g filter="url(#shadow)">
+      <rect x="700" y="405" width="220" height="70" rx="14" fill="#ffffff" stroke="#e9e2ff"/>
+      <text x="715" y="428" font-size="12" font-weight="700" fill="#6d28d9">MemoryCompressor</text>
+      <text x="715" y="446" font-size="10" fill="#5b4b82">orchestrator · policy · hooks</text>
+      <text x="715" y="462" font-size="10" fill="#5b4b82">ties all components together</text>
+    </g>
+  </g>
+
+  <!-- Before / After Bar -->
+  <g id="bars" filter="url(#shadow)">
+    <rect x="40" y="495" width="880" height="100" rx="16" fill="#ffffff" stroke="#e9e2ff"/>
+    <text x="60" y="520" font-size="13" font-weight="700" fill="#1f1147">Before vs. After · token footprint</text>
+
+    <!-- Before bar -->
+    <text x="60" y="548" font-size="11" fill="#5b4b82">Before</text>
+    <rect x="115" y="536" width="700" height="16" rx="8" fill="#ede9fe"/>
+    <rect x="115" y="536" width="700" height="16" rx="8" fill="url(#barBefore)"/>
+    <text x="825" y="549" font-size="11" font-weight="700" fill="#6d28d9">6842 tok</text>
+
+    <!-- After bar (27.2% of before = 190px of 700) -->
+    <text x="60" y="580" font-size="11" fill="#5b4b82">After</text>
+    <rect x="115" y="568" width="700" height="16" rx="8" fill="#ccfbf1"/>
+    <rect x="115" y="568" width="190" height="16" rx="8" fill="url(#barAfter)"/>
+    <text x="825" y="581" font-size="11" font-weight="700" fill="#0d9488">1823 tok</text>
+
+    <text x="60" y="602" font-size="11" font-weight="700" fill="#059669">↓ 72.8% reduction — critical facts preserved</text>
+  </g>
+</svg>

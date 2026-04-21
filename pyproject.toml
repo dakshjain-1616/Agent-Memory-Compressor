@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-memory-compressor"
+version = "0.1.0"
+description = "Intelligent memory compression library for long-running LLM agents"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Agent Memory Compressor Team"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pydantic>=2.0",
+    "tiktoken>=0.5.0",
+    "click>=8.0",
+    "rich>=13.0",
+]
+
+[project.scripts]
+memory-cli = "agent_memory_compressor.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+]
+openai = [
+    "openai>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/dakshjain-1616/agent-memory-compressor"
+Repository = "https://github.com/dakshjain-1616/agent-memory-compressor"
+Issues = "https://github.com/dakshjain-1616/agent-memory-compressor/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_memory_compressor*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
