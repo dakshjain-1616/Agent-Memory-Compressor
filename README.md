@@ -1,130 +1,165 @@
 # Agent Memory Compressor
 
-> 🤖 **Autonomously built using [NEO](https://heyneo.com) — Your Autonomous AI Engineering Agent**
+> Autonomously built using [NEO](https://heyneo.com) — Your Autonomous AI Engineering Agent
 >
 > [![VS Code Extension](https://img.shields.io/badge/VS%20Code-NEO%20Extension-007ACC?logo=visual-studio-code&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=NeoResearchInc.heyneo) [![Cursor Extension](https://img.shields.io/badge/Cursor-NEO%20Extension-000000?logo=cursor&logoColor=white)](https://marketplace.cursorapi.com/items/?itemName=NeoResearchInc.heyneo)
 
-<p align="center">
-  <img src="assets/infographic.svg" alt="Agent Memory Compressor Architecture" width="900" />
-</p>
+![Infographic](assets/infographic.svg)
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Intelligent memory compression for long-running LLM agents. Prevents context window exhaustion while preserving critical facts and decisions.
+## Overview
 
-## The Problem: Context Window Exhaustion
+`agent-memory-compressor` is a Python library that implements an intelligent memory
+compression pipeline for long-running LLM agents. It combines importance-based
+scoring, LLM-driven summarization, a forgetting curve trigger, and a
+token-budgeted context builder so agents can run indefinitely without exhausting
+their context windows — while preserving the facts and decisions that matter.
 
-Long-running LLM agents face a fundamental challenge: **finite context windows**. As conversations grow:
+## Problem: Context Window Exhaustion
 
-- Token counts exceed model limits (4K-128K tokens)
-- Older messages get truncated or dropped
-- Critical decisions and facts are lost
-- Agent performance degrades over time
-- Costs increase with repeated API calls
+A 10-turn agent session can easily accumulate 20,000+ tokens of raw history,
+leaving almost no room for the current task. Naive truncation drops older turns
+wholesale — including the decisions and discovered facts the agent needs to
+avoid repeating work. Developers need a principled way to *compress* history
+rather than *discard* it.
 
-Traditional solutions like simple truncation lose valuable context. **Agent Memory Compressor** solves this through intelligent, score-based compression.
+This library addresses the problem along three axes:
 
-## The Solution: Score-Based Compression
+- **What to keep.** A multi-signal importance scorer ranks every memory entry.
+- **How to shrink.** Three pluggable compression strategies
+  (summarize, extract facts, archive) replace low-value entries with compact
+  equivalents using any OpenAI-compatible LLM.
+- **When to act.** A forgetting curve fires compression automatically when
+  either a turn interval or a token threshold is crossed.
 
-This library implements a multi-factor importance scoring system that identifies which memories to preserve and which to compress:
+## Compression Strategy
 
-### Importance Scoring Formula
+Compression is driven by an **ImportanceScorer** that combines three signals:
 
-```
-Final Score = (Recency × 0.4) + (Type Weight × 0.4) + (Keyword Boost × 0.2)
-```
+| Signal           | Purpose                                                                 |
+| ---------------- | ----------------------------------------------------------------------- |
+| Recency          | Exponential decay — newer entries score higher.                         |
+| Type weight      | Decisions and system notes outrank routine turns and tool noise.        |
+| Keyword boost    | Entries matching goal-related keywords are promoted.                    |
 
-**Recency (40%)**: Exponential decay scoring
-- Last 5 turns: 1.0 (full importance)
-- Older entries: decay by 0.15 per turn
+Given a scored store, the **CompressionEngine** exposes three strategies:
 
-**Type Weight (40%)**: Entry type prioritization
-| Entry Type | Weight |
-|------------|--------|
-| Decision | 0.9 |
-| Fact | 0.9 |
-| Agent Turn | 0.6 |
-| User Turn | 0.5 |
-| Tool Result | 0.4 |
+- `summarize(entry)` — asks the LLM for a short summary that preserves all
+  decisions and facts.
+- `extract_facts(entry)` — asks the LLM for a bullet list of facts and
+  decisions, stored as high-importance compressed entries.
+- `archive(entry)` — replaces the entry with a minimal reference; the original
+  content is retained in the entry's `compression_history` for audit.
 
-**Keyword Boost (20%)**: Goal-related keywords add +0.2
+The **MemoryCompressor** orchestrates the pipeline: score, pick the
+lowest-scoring non-protected entries, apply the least-destructive strategy
+first, and iterate until the store is under `token_budget`. Every successful
+replacement is verified to actually reduce the token count, so compression
+can never make the context larger.
 
-### Compression Strategies
+## Forgetting Curve
 
-Three strategies handle different compression needs:
+The **ForgettingCurve** decides *when* to compress. It combines two triggers:
 
-1. **Summarize**: Groups entries into a 3-sentence summary preserving decisions
-2. **Extract Facts**: Extracts bullet-list facts as discrete FACT entries
-3. **Archive**: Minimal retention for truly low-value entries
+- **Turn-based** — fires once the number of turns since the last compression
+  reaches `compression_interval_turns` (default 10).
+- **Token-based** — fires once `MemoryStore.token_total()` exceeds
+  `compression_threshold_tokens` (default 6000), with hysteresis to prevent
+  thrashing.
 
-## The Forgetting Curve
+`should_compress(store)` returns `True` as soon as either condition is met.
+`get_compression_priority(store)` returns entries sorted by importance, so the
+orchestrator always attacks the least-valuable history first.
 
-Inspired by Ebbinghaus's forgetting curve, compression triggers on:
-
-- **Turn-based**: Compress every N turns (default: 10)
-- **Token-based**: Compress when exceeding token threshold (default: 6000)
-
-The `ForgettingCurve` class schedules compression rounds, ensuring memory stays within budget while adapting to conversation velocity.
-
-## Quick Start
-
-### Installation
+## Installation
 
 ```bash
 pip install -e .
+# optional, for live LLM calls
+pip install openai
 ```
 
-### Basic Usage
+The package depends on `pydantic`, `tiktoken` (for `cl100k_base` token counts),
+`click`, and `rich`.
 
-Import `MemoryStore`, `MemoryCompressor`, and `CompressionEngine`, populate a store with `MemoryEntry` objects, then call `compressor.compress(store)` when `should_compress` returns true.
+## Usage Example
 
-## Architecture
+```python
+from agent_memory_compressor import MemoryEntry, MemoryStore, MemoryCompressor
+from agent_memory_compressor.triggers import ForgettingCurve
+from agent_memory_compressor.context import ContextBuilder, ContextConfig
+from agent_memory_compressor.strategies import LLMClient, CompressionEngine
 
-- **models.py**: MemoryEntry and MemoryStore
-- **scoring.py**: ImportanceScorer with recency, type, keyword signals
-- **strategies.py**: CompressionEngine with summarize/extract/archive
-- **orchestrator.py**: MemoryCompressor - main compression loop
-- **triggers.py**: ForgettingCurve - schedule-based triggers
-- **context.py**: ContextBuilder - assemble LLM prompt context
-- **adapters.py**: Integration with agent-session-manager
+store = MemoryStore()
+for turn, (role, content) in enumerate(conversation, start=1):
+    store.add_entry(MemoryEntry(content=content, role=role, turn_number=turn))
 
-## Testing
+llm = LLMClient(api_key="sk-...", model="gpt-4o-mini")
+compressor = MemoryCompressor(
+    token_budget=4000,
+    protected_recent=3,
+    engine=CompressionEngine(llm_client=llm),
+)
 
-```bash
-pytest tests/ -v
+curve = ForgettingCurve(compression_interval_turns=10,
+                       compression_threshold_tokens=6000)
+
+if curve.should_compress(store):
+    report = compressor.compress(store)
+    curve.mark_compressed(store)
+    print(f"Saved {report.tokens_saved} tokens "
+          f"({report.compression_ratio:.0%} reduction)")
+
+context = ContextBuilder(ContextConfig(max_tokens=4000)).build_context(
+    store, system_message="You are a helpful assistant."
+)
 ```
 
-## ✨ New Features
+Without an API key, `LLMClient` falls back to a deterministic short stub so
+pipelines remain runnable in tests and offline demos. A full end-to-end demo
+lives at [`demos/long_run_demo.py`](demos/long_run_demo.py).
 
-### Persistence
+## API Reference
 
-`MemoryPersistence` serializes any `MemoryStore` to JSON and restores every
-`MemoryEntry` field (including `turn_number`, `importance_score`,
-`compression_history`, and the `"compressed"` role markers). Use `MemoryPersistence().save`/`load` for low-level access, or `MemoryCompressor.save`/`load` to also persist the latest `CompressionReport`.
+| Class                 | Module         | Responsibility                                                             |
+| --------------------- | -------------- | -------------------------------------------------------------------------- |
+| `MemoryEntry`         | `models`       | Pydantic model for a single turn / note.                                   |
+| `MemoryStore`         | `models`       | Ordered collection of entries with `tiktoken` token counting.              |
+| `ImportanceScorer`    | `scoring`      | Scores entries via recency, type weight, keyword boost.                    |
+| `CompressionEngine`   | `strategies`   | `summarize`, `extract_facts`, `archive` strategies.                        |
+| `LLMClient`           | `strategies`   | OpenAI-compatible client with offline fallback and mock-response support.  |
+| `MemoryCompressor`    | `orchestrator` | Iterative budget-driven compression loop, emits `CompressionReport`.       |
+| `ForgettingCurve`     | `triggers`     | Turn- and token-based compression triggers.                                |
+| `ContextBuilder`      | `context`      | Assembles a `max_tokens`-bounded context, protected recent turns first.    |
+| `SessionAdapter`      | `adapters`     | Bridges to `agent-session-manager` sessions.                               |
+| `MemoryPersistence`   | `persistence`  | JSON save/load of stores and reports.                                      |
 
-Both `str` and `pathlib.Path` are accepted, parent directories are created
-on demand, existing files are overwritten, and missing files raise
-`FileNotFoundError`.
+A `memory-cli` entrypoint (`click`-based) is installed for quick inspection,
+compression, and demo runs.
 
-### Compression analytics CLI
+## Integration with the Session Manager
 
-Installing the package registers a `memory-cli` entry point powered by
-Click and Rich.
+The `adapters` module wires the compressor directly into the
+[Stateful Agent Session Manager](https://github.com/dakshjain-1616/agent-session-manager):
 
-```bash
-# Rich-table inspection of a persisted store
-memory-cli inspect session.json
+```python
+from agent_memory_compressor.adapters import compress_session
 
-# Compress to a token budget and write an output file; a before/after bar
-# is printed as JSON on stdout.
-memory-cli compress session.json --budget 500 --output session.compressed.json
-# => {"before": 2345, "after": 489, "saved": 1856, "reduction_pct": 79.15}
-
-# Run the bundled 50-turn long-run demo programmatically
-memory-cli demo
+compressed_messages, report = compress_session(
+    session,              # anything exposing get_messages() / get_metadata()
+    token_budget=4000,
+    protected_recent=3,
+)
 ```
+
+`SessionAdapter.session_to_store` projects session messages into a
+`MemoryStore`, `compressor.compress(...)` runs the pipeline, and
+`store_to_session` projects the compressed entries back into the session's
+message format — preserving original roles and retaining the compression
+history on each compacted entry.
 
 ## License
 
-MIT License - see LICENSE file.
+MIT.

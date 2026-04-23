@@ -158,6 +158,12 @@ def main():
     
     print_header("PHASE 2: FINAL STATISTICS")
     
+    if store.token_total() > 500:
+        report = compressor.compress(store)
+        session.compression_count += 1
+        session.total_tokens_saved += report.tokens_saved
+        forgetting_curve.mark_compressed(store)
+
     final_stats = session.get_stats()
     print_stats("Session Summary", final_stats)
     

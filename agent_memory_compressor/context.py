@@ -67,11 +67,17 @@ class ContextBuilder:
         Returns:
             Formatted context string.
         """
-        available_tokens = (
-            self.config.max_tokens - 
-            self.config.system_message_reserve -
-            (self._count_context_tokens(system_message) if system_message else 0)
-        )
+        # Reserve either the configured system_message_reserve OR the actual
+        # system message size, whichever is larger. Subtracting both
+        # double-counts the reservation.
+        if system_message:
+            system_cost = max(
+                self.config.system_message_reserve,
+                self._count_context_tokens(system_message),
+            )
+        else:
+            system_cost = 0
+        available_tokens = self.config.max_tokens - system_cost
         
         # Always include protected recent entries
         protected_entries = store.get_recent(self.config.protected_recent)
@@ -138,11 +144,14 @@ class ContextBuilder:
         if system_message:
             messages.append({"role": "system", "content": system_message})
         
-        available_tokens = (
-            self.config.max_tokens - 
-            self.config.system_message_reserve -
-            self._count_context_tokens(system_message) if system_message else self.config.max_tokens
-        )
+        if system_message:
+            system_cost = max(
+                self.config.system_message_reserve,
+                self._count_context_tokens(system_message),
+            )
+        else:
+            system_cost = 0
+        available_tokens = self.config.max_tokens - system_cost
         
         # Always include protected recent entries
         protected_entries = store.get_recent(self.config.protected_recent)
